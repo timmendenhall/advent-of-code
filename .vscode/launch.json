@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug unit tests in executable 'day-1'",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--bin=day-1"
+                ]
+            }
+        },
+        {
             "name": "Debug executable 'day-1'",
             "type": "lldb",
             "request": "launch",
