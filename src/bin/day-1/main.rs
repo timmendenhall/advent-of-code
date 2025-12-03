@@ -31,21 +31,24 @@ fn main() {
 }
 
 fn do_puzzle(config: Config) {
-    let mut _password = 0;
-    let mut _safe_value = 50;
+    let mut password = 0;
+    let mut safe_value = 50;
 
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
+    let mut lines_count = 0;
 
     for line in contents.lines() {
-        _safe_value = execute_line(line, _safe_value);
+        safe_value = execute_line(line, safe_value);
+        lines_count += 1;
 
-        if _safe_value == 0 {
-            _password += 1;
+        if safe_value == 0 {
+            password += 1;
         }
     }
 
-    println!("Password is: {}", _password);
+    println!("Parsed lines: {}", lines_count);
+    println!("Password is: {}", password);
 }
 
 fn execute_line(instruction: &str, current_value: i32) -> i32 {
@@ -57,20 +60,26 @@ fn execute_line(instruction: &str, current_value: i32) -> i32 {
         return rotate_right(current_value, split[1].parse().unwrap());
     }
 
-    -1 // Failed to find L/R
+    i32::MAX // Failed to find L/R
 }
 
 fn rotate_left(safe_value: i32, rotate_by: i32) -> i32 {
     let ret = safe_value - rotate_by;
-    if ret < 0 {
-        return SAFE_VALUE_MAX - ret.abs() % SAFE_VALUE_MAX;
-    }
-    ret % SAFE_VALUE_MAX
+    wrap_safe_value(ret)
 }
 
 fn rotate_right(safe_value: i32, rotate_by: i32) -> i32 {
     let ret = safe_value + rotate_by;
-    ret % SAFE_VALUE_MAX
+    wrap_safe_value(ret)
+}
+
+fn wrap_safe_value(value: i32) -> i32 {
+    if value < 0 {
+        let new_val = value.abs() % SAFE_VALUE_MAX;
+        return (SAFE_VALUE_MAX - new_val) % SAFE_VALUE_MAX;
+    }
+
+    value % SAFE_VALUE_MAX
 }
 
 #[cfg(test)]
@@ -83,6 +92,9 @@ mod tests {
         assert_eq!(result, 52);
 
         // Wraps correctly
+        let result = rotate_right(0, SAFE_VALUE_MAX);
+        assert_eq!(result, 0);
+
         let result = rotate_right(SAFE_VALUE_MAX - 1, 1);
         assert_eq!(result, 0);
 
@@ -92,18 +104,18 @@ mod tests {
 
     #[test]
     fn test_rotate_left() {
-        let result = rotate_left(50, 2);
-        assert_eq!(result, 48);
-
         // Wraps correctly
         let result = rotate_left(0, 1);
         assert_eq!(result, SAFE_VALUE_MAX - 1);
+
+        let result = rotate_left(0, SAFE_VALUE_MAX);
+        assert_eq!(result, 0);
     }
 
     #[test]
     fn test_execute_line() {
-        let result = execute_line("L48", 50);
-        assert_eq!(result, 2);
+        let result = execute_line("L480", 50);
+        assert_eq!(result, 70);
 
         let result = execute_line("L48", 0);
         assert_eq!(result, 52);
