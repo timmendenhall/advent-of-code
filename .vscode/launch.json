@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug unit tests in executable 'day-1'",
+            "name": "day-1 - unit tests",
             "type": "lldb",
             "request": "launch",
             "cargo": {
@@ -14,10 +14,10 @@
                     "--bin=day-1"
                 ]
             }, 
-            "args": ["${workspaceFolder}/src/bin/day-1/input.txt"],
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "false"],
         },
         {
-            "name": "Debug executable 'day-1'",
+            "name": "day-1 - part-a",
             "type": "lldb",
             "request": "launch",
             "cargo": {
@@ -26,7 +26,19 @@
                     "--bin=day-1"
                 ]
             },
-            "args": ["${workspaceFolder}/src/bin/day-1/input.txt"],
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "false"],
+        },
+        {
+            "name": "day-1 - part-b",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=day-1"
+                ]
+            },
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "true"],
         },
     ]
 }
