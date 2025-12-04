@@ -88,5 +88,20 @@ fn part_a_strategy(value: i64) -> i64 {
 }
 
 fn part_b_strategy(value: i64) -> i64 {
-    1
+    let i_str = value.to_string();
+    let i_str_size = i_str.chars().count();
+    let half_size = i_str_size / 2;
+
+    for pattern_len in 1..=half_size {
+        let pattern_check = &i_str[0..pattern_len];
+
+        let mut remaining_str = i_str.clone();
+        remaining_str = remaining_str.replace(pattern_check, "");
+
+        if remaining_str.is_empty() {
+            return value;
+        }
+    }
+
+    0
 }
