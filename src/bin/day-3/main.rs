@@ -72,6 +72,24 @@ fn part_a_strategy(bank_input: &str) -> i64 {
     bank_value.parse().unwrap()
 }
 
-fn part_b_strategy(_bank_input: &str) -> i64 {
-    0
+fn part_b_strategy(bank_input: &str) -> i64 {
+    const DIGITS_TO_OUTPUT: usize = 12;
+
+    let bank_input_length = bank_input.chars().count();
+    let mut bank_values: Vec<char> = Vec::new();
+    let mut cursor = 0;
+
+    for i in 0..DIGITS_TO_OUTPUT {
+        let j: usize = DIGITS_TO_OUTPUT - i;
+        let remaining_bank_input = &bank_input[cursor..=bank_input_length - j];
+
+        let digit = remaining_bank_input.chars().max().unwrap();
+        let digit_index = remaining_bank_input.find(digit).unwrap();
+
+        cursor += digit_index + 1;
+
+        bank_values.push(digit);
+    }
+
+    bank_values.iter().collect::<String>().parse().unwrap()
 }
