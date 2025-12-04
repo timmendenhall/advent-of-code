@@ -29,6 +29,8 @@ impl Config {
     }
 }
 
+mod tests;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::build(&args).unwrap_or_else(|err| {
@@ -57,20 +59,11 @@ fn do_password_strategy(bank_input: &str, strategy: fn(&str) -> i64) -> i64 {
 }
 
 fn part_a_strategy(bank_input: &str) -> i64 {
-    println!("{}", bank_input);
     let bank_input_length = bank_input.chars().count();
-    let first_digit = bank_input[0..bank_input_length - 2].chars().max().unwrap();
+    let first_digit = bank_input[..bank_input_length - 1].chars().max().unwrap();
     let first_digit_index = bank_input.find(first_digit).unwrap();
     let remaining_bank_input = &bank_input[first_digit_index + 1..];
     let second_digit = remaining_bank_input.chars().max().unwrap();
-
-    println!(
-        "first digit: {} index: {} --",
-        first_digit, first_digit_index
-    );
-
-    println!("second digit: {}  --", second_digit);
-    println!("reamining -- {}", remaining_bank_input);
 
     let mut bank_value = String::new();
     bank_value.push(first_digit);
