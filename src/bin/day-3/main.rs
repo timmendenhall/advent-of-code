@@ -58,29 +58,13 @@ fn do_password_strategy(bank_input: &str, strategy: fn(&str) -> i64) -> i64 {
     strategy(bank_input)
 }
 
-fn part_a_strategy(bank_input: &str) -> i64 {
-    let bank_input_length = bank_input.chars().count();
-    let first_digit = bank_input[..bank_input_length - 1].chars().max().unwrap();
-    let first_digit_index = bank_input.find(first_digit).unwrap();
-    let remaining_bank_input = &bank_input[first_digit_index + 1..];
-    let second_digit = remaining_bank_input.chars().max().unwrap();
-
-    let mut bank_value = String::new();
-    bank_value.push(first_digit);
-    bank_value.push(second_digit);
-
-    bank_value.parse().unwrap()
-}
-
-fn part_b_strategy(bank_input: &str) -> i64 {
-    const DIGITS_TO_OUTPUT: usize = 12;
-
+fn get_bank_value(bank_input: &str, num_batteries: usize) -> i64 {
     let bank_input_length = bank_input.chars().count();
     let mut bank_values: Vec<char> = Vec::new();
     let mut cursor = 0;
 
-    for i in 0..DIGITS_TO_OUTPUT {
-        let j: usize = DIGITS_TO_OUTPUT - i;
+    for i in 0..num_batteries {
+        let j: usize = num_batteries - i;
         let remaining_bank_input = &bank_input[cursor..=bank_input_length - j];
 
         let digit = remaining_bank_input.chars().max().unwrap();
@@ -92,4 +76,12 @@ fn part_b_strategy(bank_input: &str) -> i64 {
     }
 
     bank_values.iter().collect::<String>().parse().unwrap()
+}
+
+fn part_a_strategy(bank_input: &str) -> i64 {
+    get_bank_value(bank_input, 2)
+}
+
+fn part_b_strategy(bank_input: &str) -> i64 {
+    get_bank_value(bank_input, 12)
 }
