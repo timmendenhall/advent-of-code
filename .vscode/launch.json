@@ -14,7 +14,19 @@
                     "--bin=day-2"
                 ]
             },
-            "args": ["${workspaceFolder}/src/bin/day-2/input.txt"]
+            "args": ["${workspaceFolder}/src/bin/day-2/input.txt", "part-a"]
+        },
+        {
+            "name": "day-2 - part-b",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=day-2"
+                ]
+            },
+            "args": ["${workspaceFolder}/src/bin/day-2/input.txt", "part-b"]
         },
         {
             "name": "day-1 - unit tests",
