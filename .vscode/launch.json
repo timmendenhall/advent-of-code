@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "day-2 - part-a",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=day-2"
+                ]
+            },
+            "args": ["${workspaceFolder}/src/bin/day-2/input.txt"]
+        },
+        {
             "name": "day-1 - unit tests",
             "type": "lldb",
             "request": "launch",
