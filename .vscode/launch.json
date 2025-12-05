@@ -5,6 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "day-5 - part-a",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=day-5"
+                ]
+            },
+            "args": ["${workspaceFolder}/src/bin/day-5/input.txt", "part-a"]
+        },
+        {
+            "name": "day-5 - part-b",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=day-5"
+                ]
+            },
+            "args": ["${workspaceFolder}/src/bin/day-5/input.txt", "part-b"]
+        },
+        {
             "name": "day-4 - part-a",
             "type": "lldb",
             "request": "launch",
