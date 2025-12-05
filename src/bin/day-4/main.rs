@@ -69,8 +69,8 @@ fn build_paper_array(inventory: String) -> Vec<Vec<bool>> {
 fn part_a_strategy(paper_array: Vec<Vec<bool>>) -> i64 {
     let mut password = 0;
 
-    for (x, row) in paper_array.iter().enumerate() {
-        for (y, _col) in row.iter().enumerate() {
+    for (y, row) in paper_array.iter().enumerate() {
+        for (x, _col) in row.iter().enumerate() {
             if is_paper_accessible_to_forklift(&paper_array, x, y) {
                 password += 1
             }
@@ -81,27 +81,33 @@ fn part_a_strategy(paper_array: Vec<Vec<bool>>) -> i64 {
 }
 
 fn is_paper_accessible_to_forklift(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> bool {
+    if !is_paper(paper_array, x, y) {
+        return false;
+    }
+
     let adjacent_rolls = get_adjacent_rolls(paper_array, x, y);
     adjacent_rolls < 4
 }
 
 fn is_paper(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> bool {
     let row = paper_array.get(y).unwrap();
-    *row.get(x).unwrap()
+    let col = row.get(x).unwrap();
+    *col
 }
 
 fn get_adjacent_rolls(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> usize {
-    let row_length = paper_array.capacity();
-    let col_length = paper_array.first().unwrap().capacity();
+    let row_length = paper_array.len();
+    let col_length = paper_array.first().unwrap().len();
 
     let x_min = if x > 0 { x - 1 } else { 0 };
     let y_min = if y > 0 { y - 1 } else { 0 };
+
     let x_max = if x < col_length - 1 {
         x + 1
     } else {
         col_length - 1
     };
-    let y_max = if y > row_length - 1 {
+    let y_max = if y < row_length - 1 {
         y + 1
     } else {
         row_length - 1
@@ -111,18 +117,16 @@ fn get_adjacent_rolls(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> usize
 
     for y_iter in y_min..=y_max {
         for x_iter in x_min..=x_max {
-            if y == y_iter && x == x_iter {
+            if (y == y_iter && x == x_iter) || !is_paper(paper_array, x_iter, y_iter) {
                 continue;
             }
-            if is_paper(paper_array, x_iter, y_iter) {
-                adjacent_rolls += 1;
-            }
+            adjacent_rolls += 1;
         }
     }
 
     adjacent_rolls
 }
 
-fn part_b_strategy(paper_array: Vec<Vec<bool>>) -> i64 {
+fn part_b_strategy(_paper_array: Vec<Vec<bool>>) -> i64 {
     0
 }
