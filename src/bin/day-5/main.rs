@@ -4,7 +4,7 @@ use std::process;
 
 struct Config {
     file_path: String,
-    strategy: fn(&mut [Vec<bool>]) -> i64,
+    strategy: fn(Vec<(i64, i64)>, Vec<i64>) -> i64,
 }
 
 impl Config {
@@ -45,101 +45,82 @@ fn do_puzzle(config: Config) {
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
-    let mut paper_array = build_paper_array(contents);
-    let password = (config.strategy)(&mut paper_array);
+    let mut fresh_ingredients_string = Vec::new();
+    let mut available_ingredients_string = Vec::new();
+    let mut is_adding_fresh_ingredients = true;
+
+    for line in contents.lines() {
+        if line.trim().is_empty() {
+            is_adding_fresh_ingredients = false;
+            continue;
+        }
+        if is_adding_fresh_ingredients {
+            fresh_ingredients_string.push(line);
+        } else {
+            available_ingredients_string.push(line);
+        }
+    }
+
+    let fresh_ingredients = build_fresh_ingredients(&fresh_ingredients_string);
+    let available_ingredients = build_available_ingredients(&available_ingredients_string);
+
+    let password = (config.strategy)(fresh_ingredients, available_ingredients);
 
     println!("Password is: {}", password);
 }
 
-fn build_paper_array(inventory: String) -> Vec<Vec<bool>> {
-    let mut ret_vec: Vec<Vec<bool>> = Vec::new();
+fn build_fresh_ingredients(inventory_ranges: &Vec<&str>) -> Vec<(i64, i64)> {
+    let mut ret_vec = Vec::new();
 
-    for line in inventory.lines() {
-        // println!("{}", line);
-        let mut line_vec: Vec<bool> = Vec::new();
-        for inventory_value in line.chars() {
-            line_vec.push(inventory_value == '@');
-        }
-        ret_vec.push(line_vec);
+    for line in inventory_ranges {
+        let split: Vec<&str> = line.split('-').collect();
+        let start: i64 = split[0].parse().unwrap();
+        let stop: i64 = split[1].parse().unwrap();
+
+        ret_vec.push((start, stop))
     }
 
     ret_vec
 }
 
-fn is_paper_accessible_to_forklift(paper_array: &[Vec<bool>], x: usize, y: usize) -> bool {
-    if !is_paper(paper_array, x, y) {
-        return false;
+fn build_available_ingredients(available_ingredients: &Vec<&str>) -> Vec<i64> {
+    let mut ret_vec: Vec<i64> = Vec::new();
+
+    for line in available_ingredients {
+        ret_vec.push(line.parse().unwrap());
     }
 
-    let adjacent_rolls = get_adjacent_rolls(paper_array, x, y);
-    adjacent_rolls < 4
+    ret_vec
 }
 
-fn is_paper(paper_array: &[Vec<bool>], x: usize, y: usize) -> bool {
-    let row = paper_array.get(y).unwrap();
-    let col = row.get(x).unwrap();
-    *col
-}
+fn part_a_strategy(
+    fresh_ingredient_id_ranges: Vec<(i64, i64)>,
+    available_ingredient_ids: Vec<i64>,
+) -> i64 {
+    let mut password_addition = 0;
 
-fn get_adjacent_rolls(paper_array: &[Vec<bool>], x: usize, y: usize) -> usize {
-    let row_length = paper_array.len();
-    let col_length = paper_array.first().unwrap().len();
-
-    let x_min = if x > 0 { x - 1 } else { 0 };
-    let y_min = if y > 0 { y - 1 } else { 0 };
-
-    let x_max = if x < col_length - 1 {
-        x + 1
-    } else {
-        col_length - 1
-    };
-    let y_max = if y < row_length - 1 {
-        y + 1
-    } else {
-        row_length - 1
-    };
-
-    let mut adjacent_rolls = 0;
-
-    for y_iter in y_min..=y_max {
-        for x_iter in x_min..=x_max {
-            if (y == y_iter && x == x_iter) || !is_paper(paper_array, x_iter, y_iter) {
-                continue;
-            }
-            adjacent_rolls += 1;
+    for i in available_ingredient_ids {
+        if is_id_in_range(i, &fresh_ingredient_id_ranges) {
+            password_addition += 1;
         }
     }
 
-    adjacent_rolls
+    password_addition
 }
 
-fn remove_all_possible_paper(paper_array: &mut [Vec<bool>]) -> i64 {
-    // let mut paper_removed = 0;
-    let mut coords_to_remove = Vec::new();
-
-    for y in 0..paper_array.len() {
-        for x in 0..paper_array[y].len() {
-            if is_paper_accessible_to_forklift(paper_array, x, y) {
-                coords_to_remove.push((x, y));
-            }
+fn is_id_in_range(id: i64, fresh_ingredient_id_ranges: &Vec<(i64, i64)>) -> bool {
+    for (start, end) in fresh_ingredient_id_ranges {
+        if id >= *start && id <= *end {
+            return true;
         }
     }
 
-    for (x, y) in coords_to_remove.iter() {
-        remove_paper_at(paper_array, *x, *y);
-    }
-
-    coords_to_remove.len() as i64
+    false
 }
 
-fn remove_paper_at(paper_array: &mut [Vec<bool>], x: usize, y: usize) {
-    paper_array[y][x] = false;
-}
-
-fn part_a_strategy(paper_array: &mut [Vec<bool>]) -> i64 {
-    456
-}
-
-fn part_b_strategy(paper_array: &mut [Vec<bool>]) -> i64 {
+fn part_b_strategy(
+    fresh_ingredient_id_ranges: Vec<(i64, i64)>,
+    available_ingredient_ids: Vec<i64>,
+) -> i64 {
     123
 }
