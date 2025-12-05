@@ -120,7 +120,55 @@ fn is_id_in_range(id: i64, fresh_ingredient_id_ranges: &Vec<(i64, i64)>) -> bool
 
 fn part_b_strategy(
     fresh_ingredient_id_ranges: Vec<(i64, i64)>,
-    available_ingredient_ids: Vec<i64>,
+    _available_ingredient_ids: Vec<i64>,
 ) -> i64 {
-    123
+    let mut final_ranges: Vec<(i64, i64)> = Vec::new();
+    // let range_copy: Vec<(i64, i64)> = fresh_ingredient_id_ranges.clone();
+
+    // First pass, get the total # of ids by calculating the difference of the ranges
+
+    // let mut overlapping_ids = 0;
+    // Second pass, check ranges for collisions and keep a count of how many should be reduced
+    // Determine which range has the lower start value (range A) other range is range B
+    // No overlap start if A.end < B.start
+    // If A.end is in Range B overlap += A.end - B.start | 18 - 16 = +2 overlap
+    // If A.start is in Range B overlap +=
+    // Example:
+    // A - 12-18
+    // B - 16-20
+    //
+    // For each range (A), if in range B (all other ranges), then mutate A
+    //
+    for (start_a, end_a) in &fresh_ingredient_id_ranges {
+        let mut new_start = *start_a;
+        let mut new_end = *end_a;
+
+        for (start_b, end_b) in &fresh_ingredient_id_ranges {
+            // Don't check against itself
+            if *start_a == *start_b && *end_a == *end_b {
+                continue;
+            }
+
+            // A end is within B, move A end to B start
+            if end_a > start_b && start_a < start_b {
+                new_end = *start_b;
+            }
+
+            // A start is within B AND A end is > B end, move A start to B end
+            if start_a >= start_b && start_a <= end_b && end_a > end_b {
+                new_start = *end_b;
+            }
+            println!("!! A: {}-{} | B: {}-{}", *start_a, *end_a, *start_b, *end_b);
+        }
+        final_ranges.push((new_start, new_end));
+    }
+
+    let mut total_ids = 0;
+
+    for (start, end) in &final_ranges {
+        println!("Range to add: {}-{}", *start, *end);
+        total_ids += *end - *start + 1;
+    }
+
+    total_ids
 }
