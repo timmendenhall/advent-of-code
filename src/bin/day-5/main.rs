@@ -118,49 +118,88 @@ fn is_id_in_range(id: i64, fresh_ingredient_id_ranges: &Vec<(i64, i64)>) -> bool
     false
 }
 
+fn is_range_collision(range_a: (i64, i64), range_b: (i64, i64)) -> bool {
+    (range_a.0 >= range_b.0 && range_a.0 <= range_b.1)
+        || (range_a.1 >= range_b.0 && range_a.1 <= range_b.1)
+}
+
+fn get_colliding_range_indices(all_ranges: &Vec<(i64, i64)>) -> Vec<(usize, usize)> {
+    let mut colliding_range_indices: Vec<(usize, usize)> = Vec::new();
+    let mut i_a = 0;
+    let mut i_b = 0;
+
+    // First pass, get ids (indices) of all ranges that collide and add the collision pairs to a vector
+    for range_a in all_ranges {
+        i_b = 0;
+        for range_b in all_ranges {
+            // Don't check against itself
+            if i_a == i_b {
+                i_b += 1;
+                continue;
+            }
+            // println!("!! Range B: {}", *start_b, *end_b);
+            if is_range_collision(*range_a, *range_b) {
+                colliding_range_indices.push((i_a, i_b));
+            }
+
+            i_b += 1;
+        }
+
+        i_a += 1;
+    }
+
+    colliding_range_indices
+}
+
 fn part_b_strategy(
     fresh_ingredient_id_ranges: Vec<(i64, i64)>,
     _available_ingredient_ids: Vec<i64>,
 ) -> i64 {
-    let mut final_ranges: Vec<(i64, i64)> = Vec::new();
-    // let range_copy: Vec<(i64, i64)> = fresh_ingredient_id_ranges.clone();
+    let mut final_ranges: Vec<(i64, i64)> = fresh_ingredient_id_ranges.clone();
 
-    // First pass, get the total # of ids by calculating the difference of the ranges
+    // loop through rest of remaining range IDs and add to final range
+    // final calculation
 
-    // let mut overlapping_ids = 0;
-    // Second pass, check ranges for collisions and keep a count of how many should be reduced
-    // Determine which range has the lower start value (range A) other range is range B
-    // No overlap start if A.end < B.start
-    // If A.end is in Range B overlap += A.end - B.start | 18 - 16 = +2 overlap
-    // If A.start is in Range B overlap +=
-    // Example:
-    // A - 12-18
-    // B - 16-20
-    //
-    // For each range (A), if in range B (all other ranges), then mutate A
-    //
-    for (start_a, end_a) in &fresh_ingredient_id_ranges {
-        let mut new_start = *start_a;
-        let mut new_end = *end_a;
+    loop {
+        let a = get_colliding_range_indices(&final_ranges);
+        if a.is_empty() {
+            break;
+        }
 
-        for (start_b, end_b) in &fresh_ingredient_id_ranges {
-            // Don't check against itself
-            if *start_a == *start_b && *end_a == *end_b {
+        let ranges_copy = final_ranges.clone();
+        let mut indices_used = Vec::new();
+        final_ranges.clear();
+
+        // loop through all collision pairs and merge to a new range, add to final range vec and remove from possible IDs
+        for (index_a, index_b) in a {
+            if indices_used.contains(&index_a) || indices_used.contains(&index_b) {
                 continue;
             }
+            let range_a = ranges_copy.get(index_a).unwrap();
+            let range_b = ranges_copy.get(index_b).unwrap();
 
-            // A end is within B, move A end to B start
-            if end_a > start_b && start_a < start_b {
-                new_end = *start_b;
-            }
+            let new_start = if range_a.0 > range_b.0 {
+                range_b.0
+            } else {
+                range_a.0
+            };
 
-            // A start is within B AND A end is > B end, move A start to B end
-            if start_a >= start_b && start_a <= end_b && end_a > end_b {
-                new_start = *end_b;
-            }
-            println!("!! A: {}-{} | B: {}-{}", *start_a, *end_a, *start_b, *end_b);
+            let new_end = if range_a.1 > range_b.1 {
+                range_a.1
+            } else {
+                range_b.1
+            };
+            indices_used.push(index_a);
+            indices_used.push(index_b);
+            final_ranges.push((new_start, new_end));
         }
-        final_ranges.push((new_start, new_end));
+
+        for (i, range) in ranges_copy.iter().enumerate() {
+            if indices_used.contains(&i) {
+                continue;
+            }
+            final_ranges.push(*range);
+        }
     }
 
     let mut total_ids = 0;
