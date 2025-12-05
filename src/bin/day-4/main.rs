@@ -4,7 +4,7 @@ use std::process;
 
 struct Config {
     file_path: String,
-    strategy: fn(Vec<Vec<bool>>) -> i64,
+    strategy: fn(&mut [Vec<bool>]) -> i64,
 }
 
 impl Config {
@@ -45,8 +45,8 @@ fn do_puzzle(config: Config) {
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
-    let paper_array = build_paper_array(contents);
-    let password = (config.strategy)(paper_array);
+    let mut paper_array = build_paper_array(contents);
+    let password = (config.strategy)(&mut paper_array);
 
     println!("Password is: {}", password);
 }
@@ -66,21 +66,7 @@ fn build_paper_array(inventory: String) -> Vec<Vec<bool>> {
     ret_vec
 }
 
-fn part_a_strategy(paper_array: Vec<Vec<bool>>) -> i64 {
-    let mut password = 0;
-
-    for (y, row) in paper_array.iter().enumerate() {
-        for (x, _col) in row.iter().enumerate() {
-            if is_paper_accessible_to_forklift(&paper_array, x, y) {
-                password += 1
-            }
-        }
-    }
-
-    password
-}
-
-fn is_paper_accessible_to_forklift(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> bool {
+fn is_paper_accessible_to_forklift(paper_array: &[Vec<bool>], x: usize, y: usize) -> bool {
     if !is_paper(paper_array, x, y) {
         return false;
     }
@@ -89,13 +75,13 @@ fn is_paper_accessible_to_forklift(paper_array: &Vec<Vec<bool>>, x: usize, y: us
     adjacent_rolls < 4
 }
 
-fn is_paper(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> bool {
+fn is_paper(paper_array: &[Vec<bool>], x: usize, y: usize) -> bool {
     let row = paper_array.get(y).unwrap();
     let col = row.get(x).unwrap();
     *col
 }
 
-fn get_adjacent_rolls(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> usize {
+fn get_adjacent_rolls(paper_array: &[Vec<bool>], x: usize, y: usize) -> usize {
     let row_length = paper_array.len();
     let col_length = paper_array.first().unwrap().len();
 
@@ -127,6 +113,41 @@ fn get_adjacent_rolls(paper_array: &Vec<Vec<bool>>, x: usize, y: usize) -> usize
     adjacent_rolls
 }
 
-fn part_b_strategy(_paper_array: Vec<Vec<bool>>) -> i64 {
-    0
+fn remove_all_possible_paper(paper_array: &mut [Vec<bool>]) -> i64 {
+    // let mut paper_removed = 0;
+    let mut coords_to_remove = Vec::new();
+
+    for y in 0..paper_array.len() {
+        for x in 0..paper_array[y].len() {
+            if is_paper_accessible_to_forklift(paper_array, x, y) {
+                coords_to_remove.push((x, y));
+            }
+        }
+    }
+
+    for (x, y) in coords_to_remove.iter() {
+        remove_paper_at(paper_array, *x, *y);
+    }
+
+    coords_to_remove.len() as i64
+}
+
+fn remove_paper_at(paper_array: &mut [Vec<bool>], x: usize, y: usize) {
+    paper_array[y][x] = false;
+}
+
+fn part_a_strategy(paper_array: &mut [Vec<bool>]) -> i64 {
+    remove_all_possible_paper(paper_array)
+}
+
+fn part_b_strategy(paper_array: &mut [Vec<bool>]) -> i64 {
+    let mut total_paper_removed = 0;
+    let mut paper_removed = -1;
+
+    while paper_removed != 0 {
+        paper_removed = remove_all_possible_paper(paper_array);
+        total_paper_removed += paper_removed;
+    }
+
+    total_paper_removed
 }
