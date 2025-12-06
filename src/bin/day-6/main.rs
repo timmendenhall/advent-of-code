@@ -1,10 +1,11 @@
+use std::cell::RefCell;
 use std::env;
 use std::fs;
 use std::process;
 
 struct Config {
     file_path: String,
-    strategy: fn(Vec<Vec<&str>>) -> i64,
+    strategy: fn(Vec<RefCell<Vec<&str>>>) -> i64,
 }
 
 impl Config {
@@ -45,18 +46,17 @@ fn do_puzzle(config: Config) {
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
-    let mut math_problems: Vec<Vec<&str>> = Vec::new();
+    let mut math_problems: Vec<RefCell<Vec<&str>>> = Vec::new();
 
     for line in contents.lines() {
         let split: Vec<&str> = line.split_whitespace().collect();
         for (x, cell) in split.iter().enumerate() {
-            // let parsed = cell.parse().unwrap();
             if let Some(a) = math_problems.get(x) {
-                a.push(cell);
+                a.borrow_mut().push(cell);
             } else {
-                let mut b = Vec::new();
+                let mut b: Vec<&str> = Vec::new();
                 b.push(cell);
-                math_problems.push(b);
+                math_problems.push(RefCell::from(b));
             }
         }
     }
@@ -66,7 +66,7 @@ fn do_puzzle(config: Config) {
     println!("Password is: {}", password);
 }
 
-fn part_a_strategy(problems: Vec<Vec<&str>>) -> i64 {
+fn part_a_strategy(problems: Vec<RefCell<Vec<&str>>>) -> i64 {
     let mut password_addition = 456;
 
     // for i in available_ingredient_ids {
@@ -78,7 +78,7 @@ fn part_a_strategy(problems: Vec<Vec<&str>>) -> i64 {
     password_addition
 }
 
-fn part_b_strategy(problems: Vec<Vec<&str>>) -> i64 {
+fn part_b_strategy(problems: Vec<RefCell<Vec<&str>>>) -> i64 {
     let mut total_ids = 123;
 
     total_ids
