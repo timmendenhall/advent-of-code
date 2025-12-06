@@ -54,8 +54,7 @@ fn do_puzzle(config: Config) {
             if let Some(a) = math_problems.get(x) {
                 a.borrow_mut().push(cell);
             } else {
-                let mut b: Vec<&str> = Vec::new();
-                b.push(cell);
+                let mut b: Vec<&str> = vec![cell];
                 math_problems.push(RefCell::from(b));
             }
         }
@@ -66,14 +65,37 @@ fn do_puzzle(config: Config) {
     println!("Password is: {}", password);
 }
 
-fn part_a_strategy(problems: Vec<RefCell<Vec<&str>>>) -> i64 {
-    let mut password_addition = 456;
+fn multiply_set(set: &[i64]) -> i64 {
+    set.iter().copied().reduce(|a, b| a * b).unwrap_or(0)
+}
 
-    // for i in available_ingredient_ids {
-    //     if is_id_in_range(i, &fresh_ingredient_id_ranges) {
-    //         password_addition += 1;
-    //     }
-    // }
+fn sum_set(set: &[i64]) -> i64 {
+    set.iter().copied().reduce(|a, b| a + b).unwrap_or(0)
+}
+
+fn part_a_strategy(problems: Vec<RefCell<Vec<&str>>>) -> i64 {
+    let mut password_addition = 0;
+
+    for set in problems {
+        let mut parsed: Vec<i64> = Vec::new();
+
+        /*
+            "part-a" => part_a_strategy,
+            "part-b" => part_b_strategy,
+            _ => part_a_strategy,
+        */
+        for val in set.borrow().iter() {
+            match *val {
+                "*" => password_addition += multiply_set(&parsed),
+                "+" => password_addition += sum_set(&parsed),
+                _ => {
+                    if let Ok(number) = val.trim().parse() {
+                        parsed.push(number);
+                    }
+                }
+            }
+        }
+    }
 
     password_addition
 }

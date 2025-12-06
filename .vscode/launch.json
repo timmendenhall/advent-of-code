@@ -14,7 +14,7 @@
                     "--bin=day-6"
                 ]
             },
-            "args": ["${workspaceFolder}/src/bin/day-6/input_test.txt", "part-a"]
+            "args": ["${workspaceFolder}/src/bin/day-6/input.txt", "part-a"]
         },
         {
             "name": "day-6 - part-b",
