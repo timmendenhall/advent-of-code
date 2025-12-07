@@ -134,7 +134,7 @@
                     "--bin=day-1"
                 ]
             }, 
-            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "false"],
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "part-a"],
         },
         {
             "name": "day-1 - part-a",
@@ -146,7 +146,7 @@
                     "--bin=day-1"
                 ]
             },
-            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "false"],
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "part-a"],
         },
         {
             "name": "day-1 - part-b",
@@ -158,7 +158,7 @@
                     "--bin=day-1"
                 ]
             },
-            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "true"],
+            "args": ["${workspaceFolder}/src/bin/day-1/input.txt", "part-b"],
         },
     ]
 }

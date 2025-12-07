@@ -1,33 +1,7 @@
+use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
-
-struct Config {
-    file_path: String,
-    strategy: fn(&str) -> i64,
-}
-
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
-        let strategy_str = args[2].clone();
-
-        let strategy = match strategy_str.as_str() {
-            "part-a" => part_a_strategy,
-            "part-b" => part_b_strategy,
-            _ => part_a_strategy,
-        };
-
-        Ok(Config {
-            file_path,
-            strategy,
-        })
-    }
-}
 
 mod tests;
 
@@ -48,14 +22,18 @@ fn do_puzzle(config: Config) {
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
     for line in contents.lines() {
-        password += do_password_strategy(line, config.strategy);
+        password += do_password_strategy(line, &config.strategy);
     }
 
     println!("Password is: {}", password);
 }
 
-fn do_password_strategy(bank_input: &str, strategy: fn(&str) -> i64) -> i64 {
-    strategy(bank_input)
+fn do_password_strategy(bank_input: &str, strategy: &str) -> i64 {
+    match strategy {
+        "part-a" => part_a_strategy(bank_input),
+        "part-b" => part_b_strategy(bank_input),
+        _ => part_a_strategy(bank_input),
+    }
 }
 
 fn get_bank_value(bank_input: &str, num_batteries: usize) -> i64 {

@@ -1,33 +1,7 @@
+use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
-
-struct Config {
-    file_path: String,
-    strategy: fn(i64) -> i64,
-}
-
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
-        let strategy_str = args[2].clone();
-
-        let strategy = match strategy_str.as_str() {
-            "part-a" => part_a_strategy,
-            "part-b" => part_b_strategy,
-            _ => part_a_strategy,
-        };
-
-        Ok(Config {
-            file_path,
-            strategy,
-        })
-    }
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -45,8 +19,8 @@ fn do_puzzle(config: Config) {
     let contents = fs::read_to_string(config.file_path.clone())
         .expect("Should have been able to read the file");
 
-    for rangePair in contents.split(",") {
-        let range: Vec<&str> = rangePair.split("-").collect();
+    for range_pair in contents.split(",") {
+        let range: Vec<&str> = range_pair.split("-").collect();
         let min_range: i64 = range[0].parse().unwrap();
         let max_range: i64 = range[1].parse().unwrap();
         password += do_range_check(&config, min_range, max_range);
@@ -59,13 +33,17 @@ fn do_range_check(config: &Config, min_range: i64, max_range: i64) -> i64 {
     let mut password_addition = 0;
 
     for i in min_range..=max_range {
-        password_addition += do_password_strategy(i, config.strategy);
+        password_addition += do_password_strategy(i, &config.strategy);
     }
     password_addition
 }
 
-fn do_password_strategy(value: i64, strategy: fn(i64) -> i64) -> i64 {
-    strategy(value)
+fn do_password_strategy(value: i64, strategy: &str) -> i64 {
+    match strategy {
+        "part-a" => part_a_strategy(value),
+        "part-b" => part_b_strategy(value),
+        _ => part_a_strategy(value),
+    }
 }
 
 fn part_a_strategy(value: i64) -> i64 {

@@ -1,3 +1,4 @@
+use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
@@ -5,27 +6,6 @@ use std::process;
 mod tests;
 
 const SAFE_VALUE_MAX: i32 = 100; // Exclusive, 100 = 0-99 range 
-
-struct Config {
-    file_path: String,
-    should_count_all_0s: bool, // First part doesn't count all 0 clicks, the second part of day 1 does
-}
-
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
-        let should_count_all_0s = args[2].clone().parse().unwrap();
-
-        Ok(Config {
-            file_path,
-            should_count_all_0s,
-        })
-    }
-}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,23 +23,19 @@ fn do_puzzle(config: Config) {
 
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
-    let mut lines_count = 0;
 
     for line in contents.lines() {
         let (new_safe_value, password_increment) =
-            execute_line(line, safe_value, config.should_count_all_0s);
-        lines_count += 1;
+            execute_line(line, safe_value, config.strategy == "part-a");
         password += password_increment;
         safe_value = new_safe_value
     }
 
-    println!("Parsed lines: {}", lines_count);
     println!("Password is: {}", password);
 }
 
-fn execute_line(instruction: &str, current_value: i32, should_count_all_0s: bool) -> (i32, i32) {
+fn execute_line(instruction: &str, current_value: i32, is_plan_a: bool) -> (i32, i32) {
     let mut result: i32 = 0;
-    let password_increment_by;
     let mut rotate_by: i32 = 0;
 
     if instruction.starts_with("L") {
@@ -73,21 +49,29 @@ fn execute_line(instruction: &str, current_value: i32, should_count_all_0s: bool
         result = rotate_right(current_value, rotate_by);
     }
 
-    if should_count_all_0s {
-        let mut rotations = 0;
-
-        if current_value != 0 && current_value + rotate_by <= 0 {
-            rotations += 1
-        }
-
-        rotations += (current_value + rotate_by).abs() / SAFE_VALUE_MAX;
-
-        password_increment_by = rotations;
+    let password_increment_by = if is_plan_a {
+        part_a_strategy(current_value, rotate_by)
     } else {
-        password_increment_by = if result == 0 { 1 } else { 0 };
-    }
+        part_b_strategy(result)
+    };
 
     (result, password_increment_by)
+}
+
+fn part_a_strategy(current_value: i32, rotate_by: i32) -> i32 {
+    let mut rotations = 0;
+
+    if current_value != 0 && current_value + rotate_by <= 0 {
+        rotations += 1
+    }
+
+    rotations += (current_value + rotate_by).abs() / SAFE_VALUE_MAX;
+
+    rotations
+}
+
+fn part_b_strategy(result: i32) -> i32 {
+    if result == 0 { 1 } else { 0 }
 }
 
 fn rotate_left(safe_value: i32, rotate_by: i32) -> i32 {

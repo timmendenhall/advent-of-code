@@ -1,33 +1,7 @@
+use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
-
-struct Config {
-    file_path: String,
-    strategy: fn(Vec<(i64, i64)>, Vec<i64>) -> i64,
-}
-
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
-        let strategy_str = args[2].clone();
-
-        let strategy = match strategy_str.as_str() {
-            "part-a" => part_a_strategy,
-            "part-b" => part_b_strategy,
-            _ => part_a_strategy,
-        };
-
-        Ok(Config {
-            file_path,
-            strategy,
-        })
-    }
-}
 
 mod tests;
 
@@ -64,7 +38,11 @@ fn do_puzzle(config: Config) {
     let fresh_ingredients = build_fresh_ingredients(&fresh_ingredients_string);
     let available_ingredients = build_available_ingredients(&available_ingredients_string);
 
-    let password = (config.strategy)(fresh_ingredients, available_ingredients);
+    let password = match config.strategy.as_str() {
+        "part-a" => part_a_strategy(fresh_ingredients, available_ingredients),
+        "part-b" => part_b_strategy(fresh_ingredients, available_ingredients),
+        _ => part_a_strategy(fresh_ingredients, available_ingredients),
+    };
 
     println!("Password is: {}", password);
 }
@@ -137,7 +115,6 @@ fn get_colliding_range_indices(all_ranges: &Vec<(i64, i64)>) -> Vec<(usize, usiz
                 i_b += 1;
                 continue;
             }
-            // println!("!! Range B: {}", *start_b, *end_b);
             if is_range_collision(*range_a, *range_b) {
                 colliding_range_indices.push((i_a, i_b));
             }
@@ -156,9 +133,6 @@ fn part_b_strategy(
     _available_ingredient_ids: Vec<i64>,
 ) -> i64 {
     let mut final_ranges: Vec<(i64, i64)> = fresh_ingredient_id_ranges.clone();
-
-    // loop through rest of remaining range IDs and add to final range
-    // final calculation
 
     loop {
         let a = get_colliding_range_indices(&final_ranges);
@@ -205,7 +179,6 @@ fn part_b_strategy(
     let mut total_ids = 0;
 
     for (start, end) in &final_ranges {
-        println!("Range to add: {}-{}", *start, *end);
         total_ids += *end - *start + 1;
     }
 
