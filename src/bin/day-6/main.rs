@@ -1,4 +1,5 @@
 use advent_of_code::config::Config;
+use core::num;
 use std::cell::RefCell;
 use std::env;
 use std::fs;
@@ -101,8 +102,8 @@ fn part_b_strategy(input: String) -> i64 {
         start_x = end_x + 1;
     }
 
-    let mut math_problems: Vec<RefCell<Vec<String>>> = Vec::new();
     // plan B the values - alien math
+    let mut math_problems: Vec<RefCell<Vec<String>>> = Vec::new();
     for problem_set in math_problems_string {
         math_problems.push(build_math_problem(&problem_set));
     }
@@ -112,29 +113,26 @@ fn part_b_strategy(input: String) -> i64 {
 }
 
 fn build_math_problem(problem_set: &RefCell<Vec<String>>) -> RefCell<Vec<String>> {
-    let mut ret: Vec<String> = Vec::new();
+    let mut num_strings: Vec<String> = Vec::new();
 
-    // For each string, calculate new value per digit index
-
-    // let mut math_problems: Vec<> = Vec::new();
-
-    let mut num_strings: Vec<RefCell<String>> = Vec::new();
-
-    for line in problem_set.borrow().iter() {
+    for line in problem_set.borrow().iter().rev().skip(1).rev() {
         for (x, cell) in line.chars().enumerate() {
             if cell == ' ' {
                 continue;
             }
             let cell_str = String::from(cell);
-            if let Some(existing_set) = num_strings.get(x) {
-                existing_set.borrow_mut().push_str(&cell_str);
+            if let Some(existing_set) = num_strings.get_mut(x) {
+                existing_set.push_str(&cell_str);
             } else {
-                num_strings.push(RefCell::from(cell_str));
+                num_strings.push(cell_str);
             }
         }
     }
 
-    RefCell::from(ret)
+    let operation_string = String::from(problem_set.borrow().iter().last().unwrap());
+    num_strings.push(operation_string);
+
+    RefCell::from(num_strings)
 }
 
 fn build_math_problem_string(input: &str, start: usize, end: usize) -> RefCell<Vec<String>> {
