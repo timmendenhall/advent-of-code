@@ -80,19 +80,47 @@ fn part_a_strategy(input: String) -> i64 {
 
 fn part_b_strategy(input: String) -> i64 {
     let mut math_problems: Vec<RefCell<Vec<&str>>> = Vec::new();
-    let mut remaining_input = input.clone();
+    // let mut remaining_input = input.clone();
 
-    for line in input.lines() {
-        let split: Vec<&str> = line.split_whitespace().collect();
-        for (x, cell) in split.iter().enumerate() {
-            if let Some(existing_set) = math_problems.get(x) {
-                existing_set.borrow_mut().push(cell);
-            } else {
-                let new_set: Vec<&str> = vec![cell];
-                math_problems.push(RefCell::from(new_set));
-            }
+    // Determine col break points
+    let mut col_break_indices = Vec::new();
+    let line: &str = input.lines().next().unwrap_or("");
+    let mut cursor = 0;
+    while let Some(a) = line[cursor..].find(' ') {
+        if is_col_divider(&input, a + cursor) {
+            col_break_indices.push(a + cursor);
+        }
+        cursor += a + 1;
+    }
+
+    let mut it = col_break_indices.iter().peekable();
+    while let Some(x) = it.next() {
+        // should be prev..next, and if no next, prev..
+        if it.peek().is_some() {}
+    }
+
+    // Add all str values to right groups
+    let mut it = input.lines().peekable();
+    while let Some(line) = it.next() {
+        if it.peek().is_some() {
+        } else {
+            // The operator to perform, can trim
+            println!("{}", line);
         }
     }
 
+    // plan B the values
+    // calc should work with values
+
     calculate_math_set(math_problems)
+}
+
+fn is_col_divider(input: &str, x: usize) -> bool {
+    for line in input.lines() {
+        if line.chars().nth(x).unwrap() != ' ' {
+            return false;
+        }
+    }
+
+    true
 }
