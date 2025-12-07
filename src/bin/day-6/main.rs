@@ -51,11 +51,11 @@ fn do_puzzle(config: Config) {
     for line in contents.lines() {
         let split: Vec<&str> = line.split_whitespace().collect();
         for (x, cell) in split.iter().enumerate() {
-            if let Some(a) = math_problems.get(x) {
-                a.borrow_mut().push(cell);
+            if let Some(existing_set) = math_problems.get(x) {
+                existing_set.borrow_mut().push(cell);
             } else {
-                let mut b: Vec<&str> = vec![cell];
-                math_problems.push(RefCell::from(b));
+                let new_set: Vec<&str> = vec![cell];
+                math_problems.push(RefCell::from(new_set));
             }
         }
     }
