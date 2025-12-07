@@ -38,14 +38,14 @@ fn sum_set(set: &[i64]) -> i64 {
     set.iter().copied().reduce(|a, b| a + b).unwrap_or(0)
 }
 
-fn calculate_math_set(math_problems: Vec<RefCell<Vec<&str>>>) -> i64 {
+fn calculate_math_set(math_problems: Vec<RefCell<Vec<String>>>) -> i64 {
     let mut total = 0;
 
     for set in math_problems {
         let mut parsed: Vec<i64> = Vec::new();
 
         for val in set.borrow().iter() {
-            match *val {
+            match val.trim() {
                 "*" => total += multiply_set(&parsed),
                 "+" => total += sum_set(&parsed),
                 _ => {
@@ -61,15 +61,16 @@ fn calculate_math_set(math_problems: Vec<RefCell<Vec<&str>>>) -> i64 {
 }
 
 fn part_a_strategy(input: String) -> i64 {
-    let mut math_problems: Vec<RefCell<Vec<&str>>> = Vec::new();
+    let mut math_problems: Vec<RefCell<Vec<String>>> = Vec::new();
 
     for line in input.lines() {
         let split: Vec<&str> = line.split_whitespace().collect();
         for (x, cell) in split.iter().enumerate() {
+            let cell_str = String::from(*cell);
             if let Some(existing_set) = math_problems.get(x) {
-                existing_set.borrow_mut().push(cell);
+                existing_set.borrow_mut().push(cell_str);
             } else {
-                let new_set: Vec<&str> = vec![cell];
+                let new_set: Vec<String> = vec![cell_str];
                 math_problems.push(RefCell::from(new_set));
             }
         }
@@ -79,8 +80,8 @@ fn part_a_strategy(input: String) -> i64 {
 }
 
 fn part_b_strategy(input: String) -> i64 {
-    let mut math_problems: Vec<RefCell<Vec<&str>>> = Vec::new();
-    // let mut remaining_input = input.clone();
+    // The substr values that'll get converted to values based on x pos
+    let mut math_problems_string: Vec<RefCell<Vec<String>>> = Vec::new();
 
     // Determine col break points
     let mut col_break_indices = Vec::new();
@@ -93,26 +94,58 @@ fn part_b_strategy(input: String) -> i64 {
         cursor += a + 1;
     }
 
-    let mut it = col_break_indices.iter().peekable();
-    while let Some(x) = it.next() {
-        // should be prev..next, and if no next, prev..
-        if it.peek().is_some() {}
+    // Builds the string from raw input, to be processed via alien math
+    let mut start_x = 0;
+    for end_x in col_break_indices {
+        math_problems_string.push(build_math_problem_string(&input, start_x, end_x));
+        start_x = end_x + 1;
     }
 
-    // Add all str values to right groups
-    let mut it = input.lines().peekable();
-    while let Some(line) = it.next() {
-        if it.peek().is_some() {
-        } else {
-            // The operator to perform, can trim
-            println!("{}", line);
+    let mut math_problems: Vec<RefCell<Vec<String>>> = Vec::new();
+    // plan B the values - alien math
+    for problem_set in math_problems_string {
+        math_problems.push(build_math_problem(&problem_set));
+    }
+
+    // calc should work with now converted values
+    calculate_math_set(math_problems)
+}
+
+fn build_math_problem(problem_set: &RefCell<Vec<String>>) -> RefCell<Vec<String>> {
+    let mut ret: Vec<String> = Vec::new();
+
+    // For each string, calculate new value per digit index
+
+    // let mut math_problems: Vec<> = Vec::new();
+
+    let mut num_strings: Vec<RefCell<String>> = Vec::new();
+
+    for line in problem_set.borrow().iter() {
+        for (x, cell) in line.chars().enumerate() {
+            if cell == ' ' {
+                continue;
+            }
+            let cell_str = String::from(cell);
+            if let Some(existing_set) = num_strings.get(x) {
+                existing_set.borrow_mut().push_str(&cell_str);
+            } else {
+                num_strings.push(RefCell::from(cell_str));
+            }
         }
     }
 
-    // plan B the values
-    // calc should work with values
+    RefCell::from(ret)
+}
 
-    calculate_math_set(math_problems)
+fn build_math_problem_string(input: &str, start: usize, end: usize) -> RefCell<Vec<String>> {
+    let mut ret = Vec::new();
+
+    for line in input.lines() {
+        let s = line[start..end].to_string();
+        ret.push(s);
+    }
+
+    RefCell::from(ret)
 }
 
 fn is_col_divider(input: &str, x: usize) -> bool {
