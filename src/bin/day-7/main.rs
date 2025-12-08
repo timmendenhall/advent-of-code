@@ -40,16 +40,58 @@ fn do_puzzle(config: Config) {
 
 fn part_a_strategy(input: String) -> i64 {
     let tachyon_manifold_diagram = build_manifold(input).unwrap();
-
-    0
+    process_manifold(tachyon_manifold_diagram)
 }
 
 fn part_b_strategy(input: String) -> i64 {
     1
 }
 
+fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
+    let mut split_count = 0;
+
+    // for each row, queue up what the next row will contain for a "next row state"
+    // compare diagram with next row state by looping over next row state chars() --
+    // if beam in next state will hit current state splitter: split
+    // if beam hits nothing, new next state has beam continue down
+    let mut state = vec![ManifoldStatus::Empty; manifold.row_len()];
+
+    for row in manifold.rows_iter() {
+        for (x, element) in row.enumerate() {
+            match element {
+                ManifoldStatus::Start => {
+                    state[x] = ManifoldStatus::Beam;
+                    println!("Start found - col: {}", x);
+                }
+                ManifoldStatus::Splitter => {
+                    println!("Splitter! - col: {}", x);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    split_count
+}
+
 fn build_manifold(input: String) -> Result<Array2D<ManifoldStatus>, Error> {
-    let rows = vec![vec![ManifoldStatus::Empty], vec![ManifoldStatus::Empty]];
+    let mut rows: Vec<Vec<ManifoldStatus>> = Vec::new();
+
+    for line in input.lines() {
+        let mut row: Vec<ManifoldStatus> = Vec::new();
+
+        for char_to_check in line.chars() {
+            match char_to_check {
+                '.' => row.push(ManifoldStatus::Empty),
+                'S' => row.push(ManifoldStatus::Start),
+                '^' => row.push(ManifoldStatus::Splitter),
+                _ => row.push(ManifoldStatus::Empty),
+            }
+        }
+
+        rows.push(row);
+    }
+
     let from_rows = Array2D::from_rows(&rows)?;
     Ok(from_rows)
 }
