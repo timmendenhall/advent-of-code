@@ -7,7 +7,7 @@ use std::process;
 #[cfg(test)]
 mod tests;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 enum ManifoldStatus {
     Empty,
     Start,
@@ -61,10 +61,12 @@ fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
             match element {
                 ManifoldStatus::Start => {
                     state[x] = ManifoldStatus::Beam;
-                    println!("Start found - col: {}", x);
                 }
                 ManifoldStatus::Splitter => {
-                    println!("Splitter! - col: {}", x);
+                    if state[x] == ManifoldStatus::Beam {
+                        split_count += 1;
+                        split_beam(&mut state, x);
+                    }
                 }
                 _ => {}
             }
@@ -72,6 +74,17 @@ fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
     }
 
     split_count
+}
+
+fn split_beam(state: &mut Vec<ManifoldStatus>, split_at_x: usize) {
+    state[split_at_x] = ManifoldStatus::Empty;
+    let current_length = state.len();
+    if split_at_x > 0 {
+        state[split_at_x - 1] = ManifoldStatus::Beam;
+    }
+    if split_at_x < current_length {
+        state[split_at_x + 1] = ManifoldStatus::Beam;
+    }
 }
 
 fn build_manifold(input: String) -> Result<Array2D<ManifoldStatus>, Error> {
