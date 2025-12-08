@@ -88,6 +88,7 @@ fn part_b_strategy(input: String) -> i64 {
     let mut col_break_indices = Vec::new();
     let line: &str = input.lines().next().unwrap_or("");
     let mut cursor = 0;
+
     while let Some(a) = line[cursor..].find(' ') {
         if is_col_divider(&input, a + cursor) {
             col_break_indices.push(a + cursor);
@@ -101,6 +102,9 @@ fn part_b_strategy(input: String) -> i64 {
         math_problems_string.push(build_math_problem_string(&input, start_x, end_x));
         start_x = end_x + 1;
     }
+    // Need to add the last col
+    let end_x = line.len();
+    math_problems_string.push(build_math_problem_string(&input, start_x, end_x));
 
     // plan B the values - alien math
     let mut math_problems: Vec<RefCell<Vec<String>>> = Vec::new();
@@ -117,9 +121,6 @@ fn build_math_problem(problem_set: &RefCell<Vec<String>>) -> RefCell<Vec<String>
 
     for line in problem_set.borrow().iter().rev().skip(1).rev() {
         for (x, cell) in line.chars().enumerate() {
-            if cell == ' ' {
-                continue;
-            }
             let cell_str = String::from(cell);
             if let Some(existing_set) = num_strings.get_mut(x) {
                 existing_set.push_str(&cell_str);
@@ -139,7 +140,11 @@ fn build_math_problem_string(input: &str, start: usize, end: usize) -> RefCell<V
     let mut ret = Vec::new();
 
     for line in input.lines() {
-        let s = line[start..end].to_string();
+        let s = if line.len() >= end {
+            line[start..end].to_string()
+        } else {
+            line[start..].to_string()
+        };
         ret.push(s);
     }
 
