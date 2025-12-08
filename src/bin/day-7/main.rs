@@ -1,12 +1,19 @@
 use advent_of_code::config::Config;
-use core::num;
-use std::cell::RefCell;
+use array2d::{Array2D, Error};
 use std::env;
 use std::fs;
 use std::process;
 
 #[cfg(test)]
 mod tests;
+
+#[derive(Clone)]
+enum ManifoldStatus {
+    Empty,
+    Start,
+    Splitter,
+    Beam,
+}
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -32,9 +39,17 @@ fn do_puzzle(config: Config) {
 }
 
 fn part_a_strategy(input: String) -> i64 {
+    let tachyon_manifold_diagram = build_manifold(input).unwrap();
+
     0
 }
 
 fn part_b_strategy(input: String) -> i64 {
     1
+}
+
+fn build_manifold(input: String) -> Result<Array2D<ManifoldStatus>, Error> {
+    let rows = vec![vec![ManifoldStatus::Empty], vec![ManifoldStatus::Empty]];
+    let from_rows = Array2D::from_rows(&rows)?;
+    Ok(from_rows)
 }
