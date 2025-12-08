@@ -1,33 +1,7 @@
+use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
-
-struct Config {
-    file_path: String,
-    strategy: fn(&mut [Vec<bool>]) -> i64,
-}
-
-impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-
-        let file_path = args[1].clone();
-        let strategy_str = args[2].clone();
-
-        let strategy = match strategy_str.as_str() {
-            "part-a" => part_a_strategy,
-            "part-b" => part_b_strategy,
-            _ => part_a_strategy,
-        };
-
-        Ok(Config {
-            file_path,
-            strategy,
-        })
-    }
-}
 
 mod tests;
 
@@ -46,7 +20,11 @@ fn do_puzzle(config: Config) {
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
     let mut paper_array = build_paper_array(contents);
-    let password = (config.strategy)(&mut paper_array);
+    let password = match config.strategy.as_str() {
+        "part-a" => part_a_strategy(&mut paper_array),
+        "part-b" => part_b_strategy(&mut paper_array),
+        _ => part_a_strategy(&mut paper_array),
+    };
 
     println!("Password is: {}", password);
 }
