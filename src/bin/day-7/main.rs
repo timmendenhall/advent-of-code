@@ -7,7 +7,7 @@ use std::process;
 #[cfg(test)]
 mod tests;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum ManifoldStatus {
     Empty,
     Start,
@@ -29,26 +29,61 @@ fn do_puzzle(config: Config) {
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
+    let tachyon_manifold_diagram = build_manifold(contents).unwrap();
+
     let password = match config.strategy.as_str() {
-        "part-a" => part_a_strategy(contents),
-        "part-b" => part_b_strategy(contents),
-        _ => part_a_strategy(contents),
+        "part-a" => process_manifold_a(tachyon_manifold_diagram),
+        "part-b" => process_manifold_b(tachyon_manifold_diagram),
+        _ => process_manifold_a(tachyon_manifold_diagram),
     };
 
     println!("Password is: {}", password);
 }
 
-fn part_a_strategy(input: String) -> i64 {
-    let tachyon_manifold_diagram = build_manifold(input).unwrap();
-    process_manifold(tachyon_manifold_diagram)
-}
-
-fn part_b_strategy(input: String) -> i64 {
-    1
-}
-
-fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
+fn process_manifold_a(manifold: Array2D<ManifoldStatus>) -> i64 {
     let mut split_count = 0;
+
+    // for each row, queue up what the next row will contain for a "next row state"
+    // compare diagram with next row state by looping over next row state chars() --
+    // if beam in next state will hit current state splitter: split
+    // if beam hits nothing, new next state has beam continue down
+    let mut state = vec![ManifoldStatus::Empty; manifold.row_len()];
+
+    for row in manifold.rows_iter() {
+        let row_clone = row.clone();
+
+        for (x, element) in row.enumerate() {
+            match element {
+                ManifoldStatus::Start => {
+                    state[x] = ManifoldStatus::Beam;
+                }
+                ManifoldStatus::Splitter => {
+                    if state[x] == ManifoldStatus::Beam {
+                        split_count += 1;
+                        split_beam(&mut state, x);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        let mut beam_count = 0;
+        for (x, element) in row_clone.enumerate() {
+            if state[x] == ManifoldStatus::Beam {
+                beam_count += 1;
+            }
+            println!(
+                "x: {:#?} | element: {:#?} | count: {}",
+                x, element, beam_count
+            );
+        }
+    }
+
+    split_count
+}
+
+fn process_manifold_b(manifold: Array2D<ManifoldStatus>) -> i64 {
+    let mut timelines = 0;
 
     // for each row, queue up what the next row will contain for a "next row state"
     // compare diagram with next row state by looping over next row state chars() --
@@ -64,8 +99,7 @@ fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
                 }
                 ManifoldStatus::Splitter => {
                     if state[x] == ManifoldStatus::Beam {
-                        split_count += 1;
-                        split_beam(&mut state, x);
+                        timelines += split_beam(&mut state, x);
                     }
                 }
                 _ => {}
@@ -73,18 +107,22 @@ fn process_manifold(manifold: Array2D<ManifoldStatus>) -> i64 {
         }
     }
 
-    split_count
+    timelines
 }
 
-fn split_beam(state: &mut Vec<ManifoldStatus>, split_at_x: usize) {
+fn split_beam(state: &mut [ManifoldStatus], split_at_x: usize) -> i64 {
     state[split_at_x] = ManifoldStatus::Empty;
     let current_length = state.len();
+
     if split_at_x > 0 {
         state[split_at_x - 1] = ManifoldStatus::Beam;
     }
+
     if split_at_x < current_length {
         state[split_at_x + 1] = ManifoldStatus::Beam;
     }
+
+    2
 }
 
 fn build_manifold(input: String) -> Result<Array2D<ManifoldStatus>, Error> {
