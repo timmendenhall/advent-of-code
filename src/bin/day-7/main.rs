@@ -83,23 +83,32 @@ fn process_manifold_a(manifold: Array2D<ManifoldStatus>) -> i64 {
 }
 
 fn process_manifold_b(manifold: Array2D<ManifoldStatus>) -> i64 {
-    let mut timelines = 0;
-
-    // for each row, queue up what the next row will contain for a "next row state"
-    // compare diagram with next row state by looping over next row state chars() --
-    // if beam in next state will hit current state splitter: split
-    // if beam hits nothing, new next state has beam continue down
     let mut state = vec![ManifoldStatus::Empty; manifold.row_len()];
 
-    for row in manifold.rows_iter() {
+    // The 2D Array state of paths, each value is the number of paths that can reach that cell location
+    let mut paths = Array2D::filled_with(0, manifold.num_rows(), manifold.num_columns());
+
+    for (y, row) in manifold.rows_iter().enumerate() {
+        // let row_copy = row.clone();
+
         for (x, element) in row.enumerate() {
             match element {
                 ManifoldStatus::Start => {
                     state[x] = ManifoldStatus::Beam;
+                    paths[(y, x)] = 1;
                 }
                 ManifoldStatus::Splitter => {
                     if state[x] == ManifoldStatus::Beam {
-                        timelines += split_beam(&mut state, x);
+                        split_beam(&mut state, x);
+                        let current_paths = if y > 0 { paths[(y - 1, x)] } else { 1 };
+                        paths[(y, x - 1)] += current_paths;
+                        paths[(y, x + 1)] += current_paths;
+                    }
+                }
+                ManifoldStatus::Empty => {
+                    if state[x] == ManifoldStatus::Beam {
+                        let current_paths = if y > 0 { paths[(y - 1, x)] } else { 1 };
+                        paths[(y, x)] += current_paths;
                     }
                 }
                 _ => {}
@@ -107,10 +116,26 @@ fn process_manifold_b(manifold: Array2D<ManifoldStatus>) -> i64 {
         }
     }
 
-    timelines
+    // Debug printing
+    for row in paths.rows_iter() {
+        for element in row {
+            print!("{} ", element);
+        }
+        println!();
+    }
+
+    let mut sum = 0;
+    if let Some(row) = paths.rows_iter().last() {
+        for element in row {
+            sum += element;
+        }
+        println!();
+    }
+
+    sum
 }
 
-fn split_beam(state: &mut [ManifoldStatus], split_at_x: usize) -> i64 {
+fn split_beam(state: &mut [ManifoldStatus], split_at_x: usize) {
     state[split_at_x] = ManifoldStatus::Empty;
     let current_length = state.len();
 
@@ -121,8 +146,6 @@ fn split_beam(state: &mut [ManifoldStatus], split_at_x: usize) -> i64 {
     if split_at_x < current_length {
         state[split_at_x + 1] = ManifoldStatus::Beam;
     }
-
-    2
 }
 
 fn build_manifold(input: String) -> Result<Array2D<ManifoldStatus>, Error> {
