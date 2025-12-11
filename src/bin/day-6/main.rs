@@ -1,5 +1,4 @@
 use advent_of_code::config::Config;
-use core::num;
 use std::cell::RefCell;
 use std::env;
 use std::fs;

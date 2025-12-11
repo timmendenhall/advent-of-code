@@ -14,9 +14,6 @@ struct Vec3 {
 }
 
 impl Vec3 {
-    fn new(x: f32, y: f32, z: f32) -> Self {
-        Self { x, y, z }
-    }
     fn from(string: &str) -> Self {
         let split: Vec<&str> = string.split(',').collect();
         let x = split[0].parse().unwrap();
@@ -24,7 +21,7 @@ impl Vec3 {
         let z = split[2].parse().unwrap();
         Self { x, y, z }
     }
-    fn distance_to(self: &Self, vec: &Vec3) -> f32 {
+    fn distance_to(&self, vec: &Vec3) -> f32 {
         let x = (self.x - vec.x).powi(2);
         let y = (self.y - vec.y).powi(2);
         let z = (self.z - vec.z).powi(2);
@@ -61,14 +58,31 @@ fn do_part_a(contents: String) -> i64 {
     let mut available_junction_boxes = all_junction_boxes.clone();
     let mut circuits: Vec<Vec<Vec3>> = Vec::new();
 
-    for junction_box in all_junction_boxes {
-        for checking_box in available_junction_boxes.iter() {
-            let distance = junction_box.distance_to(checking_box);
-            println!(
-                "Checking {:#?} -> {:#?} | distance = {}",
-                junction_box, checking_box, distance
-            );
-        }
+    for junction_box in all_junction_boxes.iter() {
+        let closest_box = available_junction_boxes
+            .iter()
+            .filter_map(|jbox| {
+                if jbox == junction_box {
+                    None
+                } else {
+                    Some(junction_box.distance_to(jbox))
+                }
+            })
+            .fold(f32::INFINITY, |a, b| a.min(b));
+
+        // for checking_box in available_junction_boxes.iter() {
+        //     if junction_box == *checking_box {
+        //         continue;
+        //     }
+
+        //     let distance = junction_box.distance_to(checking_box);
+        //     println!(
+        //         "Checking {:#?} -> {:#?} | distance = {}",
+        //         junction_box, checking_box, distance
+        //     );
+        // }
+
+        println!("closest: {}", closest_box);
     }
 
     1
