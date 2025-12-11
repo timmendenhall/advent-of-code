@@ -21,12 +21,38 @@ impl Vec3 {
         let z = split[2].parse().unwrap();
         Self { x, y, z }
     }
+
     fn distance_to(&self, vec: &Vec3) -> f32 {
         let x = (self.x - vec.x).powi(2);
         let y = (self.y - vec.y).powi(2);
         let z = (self.z - vec.z).powi(2);
 
         (x + y + z).sqrt()
+    }
+}
+
+#[derive(Clone)]
+struct Circuit {
+    junction_boxes: Vec<Vec3>,
+}
+
+impl Circuit {
+    fn new() -> Self {
+        Self {
+            junction_boxes: Vec::new(),
+        }
+    }
+
+    fn add_junction(&mut self, junction_box: Vec3) {
+        self.junction_boxes.push(junction_box);
+    }
+
+    fn has_junction(&self, junction_box: &Vec3) -> bool {
+        self.junction_boxes.contains(junction_box)
+    }
+
+    fn len(&self) -> usize {
+        self.junction_boxes.len()
     }
 }
 
@@ -56,33 +82,27 @@ fn do_puzzle(config: Config) {
 fn do_part_a(contents: String) -> i64 {
     let all_junction_boxes = build_junction_boxes(contents);
     let mut available_junction_boxes = all_junction_boxes.clone();
-    let mut circuits: Vec<Vec<Vec3>> = Vec::new();
+    let mut circuits: Vec<Circuit> = Vec::new();
 
     for junction_box in all_junction_boxes.iter() {
-        let closest_box = available_junction_boxes
+        if let Some(closest_box) = available_junction_boxes
             .iter()
-            .filter_map(|jbox| {
-                if jbox == junction_box {
-                    None
-                } else {
-                    Some(junction_box.distance_to(jbox))
-                }
+            .filter(|jbox| *jbox != junction_box)
+            .min_by(|a, b| {
+                let da = junction_box.distance_to(a);
+                let db = junction_box.distance_to(b);
+                da.partial_cmp(&db).unwrap()
             })
-            .fold(f32::INFINITY, |a, b| a.min(b));
+        {
+            // println!("closest: {:#?}", closest_box);
+            add_boxes_to_circuits(&mut circuits, junction_box, closest_box);
+        }
+    }
 
-        // for checking_box in available_junction_boxes.iter() {
-        //     if junction_box == *checking_box {
-        //         continue;
-        //     }
+    circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
 
-        //     let distance = junction_box.distance_to(checking_box);
-        //     println!(
-        //         "Checking {:#?} -> {:#?} | distance = {}",
-        //         junction_box, checking_box, distance
-        //     );
-        // }
-
-        println!("closest: {}", closest_box);
+    for c in circuits.iter().take(5) {
+        println!("SORTED {}", c.len());
     }
 
     1
@@ -101,4 +121,32 @@ fn build_junction_boxes(contents: String) -> Vec<Vec3> {
     }
 
     junction_boxes
+}
+
+fn add_boxes_to_circuits(circuits: &mut Vec<Circuit>, box_a: &Vec3, box_b: &Vec3) {
+    let a_idx = circuits.iter().position(|c| c.has_junction(box_a));
+    let b_idx = circuits.iter().position(|c| c.has_junction(box_b));
+
+    match (a_idx, b_idx) {
+        // A in circuit, B not in any
+        (Some(i), None) => {
+            circuits[i].add_junction(box_b.clone());
+        }
+
+        // B in circuit, A not in any
+        (None, Some(i)) => {
+            circuits[i].add_junction(box_a.clone());
+        }
+
+        // Neither in any circuit -> make new
+        (None, None) => {
+            let mut c = Circuit::new();
+            c.add_junction(box_a.clone());
+            c.add_junction(box_b.clone());
+            circuits.push(c);
+        }
+
+        // Both already in the same circuit -> nothing to do
+        (Some(_), Some(_)) => { /* do nothing */ }
+    }
 }
