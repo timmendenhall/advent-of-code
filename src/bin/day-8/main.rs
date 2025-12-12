@@ -2,6 +2,7 @@ use advent_of_code::config::Config;
 use std::env;
 use std::fs;
 use std::process;
+use std::time::Instant;
 
 #[cfg(test)]
 mod tests;
@@ -27,7 +28,7 @@ impl Vec3 {
         let y = (self.y - vec.y).powi(2);
         let z = (self.z - vec.z).powi(2);
 
-        (x + y + z).sqrt()
+        x + y + z //.sqrt()
     }
 }
 
@@ -70,23 +71,31 @@ fn do_puzzle(config: Config) {
     let contents =
         fs::read_to_string(config.file_path).expect("Should have been able to read the file");
 
+    let start = Instant::now();
+
     let password = match config.strategy.as_str() {
         "part-a" => do_part_a(contents),
         "part-b" => do_part_b(contents),
         _ => do_part_a(contents),
     };
 
-    println!("Password is: {}", password);
+    let end = Instant::now();
+    let process_time = end - start;
+    println!(
+        "Password is: {} | took: {} µs",
+        password,
+        process_time.as_micros()
+    );
 }
 
 fn do_part_a(contents: String) -> i64 {
     let all_junction_boxes = build_junction_boxes(contents);
-    let available_junction_boxes = all_junction_boxes.clone();
+    // let available_junction_boxes = all_junction_boxes.clone();
     let mut closest_pairs = Vec::new();
 
     // Get all closest boxes first
     for junction_box in all_junction_boxes.iter() {
-        if let Some(closest_box) = available_junction_boxes
+        if let Some(closest_box) = all_junction_boxes
             .iter()
             .filter(|jbox| *jbox != junction_box)
             .min_by(|a, b| {
@@ -108,27 +117,27 @@ fn do_part_a(contents: String) -> i64 {
         .sort_by(|(_a1, _a2, dist_a), (_b1, _b2, dist_b)| dist_a.partial_cmp(dist_b).unwrap());
 
     let mut circuits: Vec<Circuit> = Vec::new();
-    for (jbox_a, jbox_b, distance) in closest_pairs {
+    for (jbox_a, jbox_b, _distance) in closest_pairs.iter().take(10) {
         add_boxes_to_circuits(&mut circuits, jbox_a, jbox_b)
     }
 
     circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
 
     // then calculate the results
+    do_part_a_calculation(&circuits)
+}
+
+fn do_part_b(_contents: String) -> i64 {
+    2
+}
+
+fn do_part_a_calculation(circuits: &Vec<Circuit>) -> i64 {
     circuits
         .iter()
         .take(3)
         .map(|c| c.len() as i64)
         .reduce(|a, b| a * b)
         .unwrap_or(0)
-}
-
-fn do_part_b(contents: String) -> i64 {
-    2
-}
-
-fn multiply_set(set: &[i64]) -> i64 {
-    set.iter().copied().reduce(|a, b| a * b).unwrap_or(0)
 }
 
 fn build_junction_boxes(contents: String) -> Vec<Vec3> {
@@ -166,6 +175,13 @@ fn add_boxes_to_circuits(circuits: &mut Vec<Circuit>, box_a: &Vec3, box_b: &Vec3
         }
 
         // Both already in the same circuit -> nothing to do
-        (Some(_), Some(_)) => { /* do nothing */ }
+        (Some(a), Some(b)) => {
+            println!("A:{} | B:{}", a, b);
+            if a == b {
+                return;
+            }
+
+            println!("Does not match!");
+        }
     }
 }
