@@ -81,9 +81,10 @@ fn do_puzzle(config: Config) {
 
 fn do_part_a(contents: String) -> i64 {
     let all_junction_boxes = build_junction_boxes(contents);
-    let mut available_junction_boxes = all_junction_boxes.clone();
-    let mut circuits: Vec<Circuit> = Vec::new();
+    let available_junction_boxes = all_junction_boxes.clone();
+    let mut closest_pairs = Vec::new();
 
+    // Get all closest boxes first
     for junction_box in all_junction_boxes.iter() {
         if let Some(closest_box) = available_junction_boxes
             .iter()
@@ -94,11 +95,21 @@ fn do_part_a(contents: String) -> i64 {
                 da.partial_cmp(&db).unwrap()
             })
         {
-            // println!("closest: {:#?}", closest_box);
-            add_boxes_to_circuits(&mut circuits, junction_box, closest_box);
+            closest_pairs.push((
+                junction_box,
+                closest_box,
+                junction_box.distance_to(closest_box),
+            ));
         }
     }
 
+    // Sort by distance ascending
+    closest_pairs
+        .sort_by(|(_a1, _a2, dist_a), (_b1, _b2, dist_b)| dist_a.partial_cmp(dist_b).unwrap());
+
+    // then calculate the results
+
+    let mut circuits: Vec<Circuit> = Vec::new();
     circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
 
     for c in circuits.iter().take(5) {
