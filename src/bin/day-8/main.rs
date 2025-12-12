@@ -107,20 +107,28 @@ fn do_part_a(contents: String) -> i64 {
     closest_pairs
         .sort_by(|(_a1, _a2, dist_a), (_b1, _b2, dist_b)| dist_a.partial_cmp(dist_b).unwrap());
 
-    // then calculate the results
-
     let mut circuits: Vec<Circuit> = Vec::new();
-    circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
-
-    for c in circuits.iter().take(5) {
-        println!("SORTED {}", c.len());
+    for (jbox_a, jbox_b, distance) in closest_pairs {
+        add_boxes_to_circuits(&mut circuits, jbox_a, jbox_b)
     }
 
-    1
+    circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
+
+    // then calculate the results
+    circuits
+        .iter()
+        .take(3)
+        .map(|c| c.len() as i64)
+        .reduce(|a, b| a * b)
+        .unwrap_or(0)
 }
 
 fn do_part_b(contents: String) -> i64 {
     2
+}
+
+fn multiply_set(set: &[i64]) -> i64 {
+    set.iter().copied().reduce(|a, b| a * b).unwrap_or(0)
 }
 
 fn build_junction_boxes(contents: String) -> Vec<Vec3> {
