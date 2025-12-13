@@ -1,4 +1,5 @@
 use advent_of_code::config::Config;
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::process;
@@ -90,20 +91,30 @@ fn do_puzzle(config: Config) {
 
 fn do_part_a(contents: String) -> i64 {
     let all_junction_boxes = build_junction_boxes(contents);
-    // let available_junction_boxes = all_junction_boxes.clone();
     let mut closest_pairs = Vec::new();
+    let mut added_pairs = HashSet::new();
 
     // Get all closest boxes first
-    for junction_box in all_junction_boxes.iter() {
-        if let Some(closest_box) = all_junction_boxes
+    for (i, junction_box) in all_junction_boxes.iter().enumerate() {
+        if let Some((j, closest_box)) = all_junction_boxes
             .iter()
-            .filter(|jbox| *jbox != junction_box)
-            .min_by(|a, b| {
+            .enumerate()
+            .filter(|(_, jbox)| *jbox != junction_box)
+            .min_by(|(_, a), (_, b)| {
                 let da = junction_box.distance_to(a);
                 let db = junction_box.distance_to(b);
                 da.partial_cmp(&db).unwrap()
             })
         {
+            if added_pairs.contains(&(i, j)) || added_pairs.contains(&(j, i)) {
+                // println!("Continuing as the pairs were already found.");
+                continue;
+            }
+
+            // Mark both directions as seen
+            added_pairs.insert((i, j));
+            added_pairs.insert((j, i));
+
             closest_pairs.push((
                 junction_box,
                 closest_box,
@@ -112,18 +123,24 @@ fn do_part_a(contents: String) -> i64 {
         }
     }
 
+    let amount_of_connection_attempts: usize = if all_junction_boxes.len() > 20 {
+        1000
+    } else {
+        10
+    };
+
     // Sort by distance ascending
     closest_pairs
         .sort_by(|(_a1, _a2, dist_a), (_b1, _b2, dist_b)| dist_a.partial_cmp(dist_b).unwrap());
 
     let mut circuits: Vec<Circuit> = Vec::new();
-    for (jbox_a, jbox_b, _distance) in closest_pairs.iter().take(10) {
-        add_boxes_to_circuits(&mut circuits, jbox_a, jbox_b)
+    for i in 0..amount_of_connection_attempts {
+        let (jbox_a, jbox_b, _d) = closest_pairs[i];
+        add_boxes_to_circuits(&mut circuits, jbox_a, jbox_b);
     }
 
     circuits.sort_by_key(|c| std::cmp::Reverse(c.len()));
 
-    // then calculate the results
     do_part_a_calculation(&circuits)
 }
 
@@ -131,7 +148,7 @@ fn do_part_b(_contents: String) -> i64 {
     2
 }
 
-fn do_part_a_calculation(circuits: &Vec<Circuit>) -> i64 {
+fn do_part_a_calculation(circuits: &[Circuit]) -> i64 {
     circuits
         .iter()
         .take(3)
